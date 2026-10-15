@@ -1,0 +1,38 @@
+#include <Servo.h>
+
+#define SERVO_PIN PB7
+#define RAIN_DO_PIN PB6
+#define DEBOUNCE_MS 100UL   // reading must hold steady this long to count
+
+Servo myServo;
+
+bool stableWet   = false;
+bool lastRawWet  = false;
+unsigned long lastChangeTime = 0;
+
+void setup()
+{
+  pinMode(RAIN_DO_PIN, INPUT_PULLUP);
+
+  myServo.attach(SERVO_PIN);
+  myServo.write(0);
+
+  lastRawWet = (digitalRead(RAIN_DO_PIN) == LOW);
+}
+
+void loop()
+{
+  bool rawWet = (digitalRead(RAIN_DO_PIN) == LOW);
+
+  if (rawWet != lastRawWet)
+  {
+    lastChangeTime = millis();
+    lastRawWet = rawWet;
+  }
+
+  if ((millis() - lastChangeTime) >= DEBOUNCE_MS && rawWet != stableWet)
+  {
+    stableWet = rawWet;
+    myServo.write(stableWet ? 90 : 0);
+  }
+}
